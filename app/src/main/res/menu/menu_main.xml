@@ -4,9 +4,27 @@
     
     <item
         android:id="@+id/action_search"
-        android:title="Buscar"
+        android:title="@string/menu_search"
         android:icon="@android:drawable/ic_menu_search"
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView" />
+    
+    <item
+        android:id="@+id/action_sort"
+        android:title="@string/menu_sort"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/sort_by_date"
+                android:title="📅 Por fecha (recientes primero)" />
+            <item
+                android:id="@+id/sort_by_title"
+                android:title="🔤 Por título (A-Z)" />
+            <item
+                android:id="@+id/sort_by_priority"
+                android:title="⭐ Por prioridad" />
+        </menu>
+    </item>
         
 </menu>

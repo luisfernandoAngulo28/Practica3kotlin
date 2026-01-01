@@ -11,7 +11,8 @@ import com.google.android.material.button.MaterialButton
 class NoteAdapter(
     private val notes: MutableList<Note>,
     private val onDeleteClick: (Int) -> Unit,
-    private val onEditClick: (Int) -> Unit
+    private val onEditClick: (Int) -> Unit,
+    private val onShareClick: (Int) -> Unit
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     private var lastPosition = -1
@@ -20,7 +21,9 @@ class NoteAdapter(
         val tvTitle: TextView = itemView.findViewById(R.id.tvNoteTitle)
         val tvDescription: TextView = itemView.findViewById(R.id.tvNoteDescription)
         val tvTimestamp: TextView = itemView.findViewById(R.id.tvNoteTimestamp)
+        val tvPriority: TextView = itemView.findViewById(R.id.tvNotePriority)
         val btnDelete: MaterialButton = itemView.findViewById(R.id.btnDelete)
+        val btnShare: MaterialButton = itemView.findViewById(R.id.btnShare)
         
         // Obtener referencia al CardView para cambiar color de fondo
         private val cardView = itemView as com.google.android.material.card.MaterialCardView
@@ -42,11 +45,23 @@ class NoteAdapter(
         holder.tvDescription.text = note.description
         holder.tvTimestamp.text = note.getFormattedDate()
         
-        // Aplicar color pastel al fondo de la tarjeta
+        // Mostrar prioridad con emoji
+        val priorityEmoji = when (note.priority) {
+            Priority.HIGH -> "🔴"
+            Priority.MEDIUM -> "🟡"
+            Priority.LOW -> "🟢"
+        }
+        holder.tvPriority.text = "$priorityEmoji ${note.priority.displayName}"
+        
+        // Aplicar color según prioridad
         holder.setCardBackgroundColor(note.color)
         
         holder.btnDelete.setOnClickListener {
             onDeleteClick(position)
+        }
+        
+        holder.btnShare.setOnClickListener {
+            onShareClick(position)
         }
         
         // Long press para editar

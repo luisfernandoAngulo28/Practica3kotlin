@@ -1,13 +1,16 @@
 package com.example.practica3
 
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.os.Bundle
 import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
@@ -78,7 +81,8 @@ class MainActivity : AppCompatActivity() {
         noteAdapter = NoteAdapter(
             filteredNotesList,
             onDeleteClick = { position -> deleteNote(position) },
-            onEditClick = { position -> editNote(position) }
+            onEditClick = { position -> editNote(position) },
+            onShareClick = { position -> shareNote(position) }
         )
         
         recyclerView.apply {
@@ -177,46 +181,55 @@ class MainActivity : AppCompatActivity() {
     private fun loadSampleNotes() {
         // Comentar para mostrar Empty State al iniciar
         // Descomentar para tener notas de ejemplo
-        notesList.add(Note(noteIdCounter++, "Comprar despensa", "Leche, pan, huevos y frutas"))
-        notesList.add(Note(noteIdCounter++, "Estudiar Android", "Repasar RecyclerView y Adapters"))
-        notesList.add(Note(noteIdCounter++, "Ejercicio", "Salir a correr 30 minutos"))
+        notesList.add(Note(noteIdCounter++, "Comprar víveres", "Comprar leche, huevos, pan, frutas y verduras para la semana", priority = Priority.HIGH))
+        notesList.add(Note(noteIdCounter++, "Reunión del proyecto", "Reunión de equipo el viernes a las 3:00 PM para revisar avances", priority = Priority.MEDIUM))
+        notesList.add(Note(noteIdCounter++, "Leer libro recomendado", "Terminar de leer 'Clean Code' antes de fin de mes", priority = Priority.LOW))
     }
     
     private fun addNewNote() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note_with_priority, null)
         val etTitle = dialogView.findViewById<EditText>(R.id.etNoteTitle)
         val etDescription = dialogView.findViewById<EditText>(R.id.etNoteDescription)
+        val rgPriority = dialogView.findViewById<RadioGroup>(R.id.rgPriority)
         
         val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle("Nueva Nota")
+            .setTitle(R.string.dialog_title_new_note)
             .setView(dialogView)
-            .setPositiveButton("Agregar") { _, _ ->
+            .setPositiveButton(R.string.button_add) { _, _ ->
                 val title = etTitle.text.toString().trim()
                 val description = etDescription.text.toString().trim()
                 
                 if (title.isEmpty()) {
-                    Toast.makeText(this, "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.message_title_empty, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 
                 if (description.isEmpty()) {
-                    Toast.makeText(this, "La descripción no puede estar vacía", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.message_description_empty, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
+                }
+                
+                val priority = when (rgPriority.checkedRadioButtonId) {
+                    R.id.rbHigh -> Priority.HIGH
+                    R.id.rbMedium -> Priority.MEDIUM
+                    R.id.rbLow -> Priority.LOW
+                    else -> Priority.MEDIUM
                 }
                 
                 val newNote = Note(
                     id = noteIdCounter++,
                     title = title,
-                    description = description
+                    description = description,
+                    priority = priority
                 )
                 notesList.add(newNote)
                 filteredNotesList.add(newNote)
                 noteAdapter.notifyItemInserted(filteredNotesList.size - 1)
                 recyclerView.smoothScrollToPosition(filteredNotesList.size - 1)
-                Toast.makeText(this, "Nota agregada correctamente", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.message_note_added, Toast.LENGTH_SHORT).show()
                 updateEmptyState()
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .create()
         
         // Aplicar animación al diálogo
@@ -227,45 +240,60 @@ class MainActivity : AppCompatActivity() {
     private fun editNote(position: Int) {
         val note = filteredNotesList[position]
         val originalPosition = notesList.indexOf(note)
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note_with_priority, null)
         val etTitle = dialogView.findViewById<EditText>(R.id.etNoteTitle)
         val etDescription = dialogView.findViewById<EditText>(R.id.etNoteDescription)
+        val rgPriority = dialogView.findViewById<RadioGroup>(R.id.rgPriority)
         
         // Pre-llenar los campos con los datos actuales
         etTitle.setText(note.title)
         etDescription.setText(note.description)
         
+        // Seleccionar la prioridad actual
+        when (note.priority) {
+            Priority.HIGH -> rgPriority.check(R.id.rbHigh)
+            Priority.MEDIUM -> rgPriority.check(R.id.rbMedium)
+            Priority.LOW -> rgPriority.check(R.id.rbLow)
+        }
+        
         val dialog = MaterialAlertDialogBuilder(this)
-            .setTitle("Editar Nota")
+            .setTitle(R.string.dialog_title_edit_note)
             .setView(dialogView)
-            .setPositiveButton("Guardar") { _, _ ->
+            .setPositiveButton(R.string.button_save) { _, _ ->
                 val title = etTitle.text.toString().trim()
                 val description = etDescription.text.toString().trim()
                 
                 if (title.isEmpty()) {
-                    Toast.makeText(this, "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.message_title_empty, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 
                 if (description.isEmpty()) {
-                    Toast.makeText(this, "La descripción no puede estar vacía", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, R.string.message_description_empty, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 
-                // Actualizar la nota manteniendo el ID, timestamp y color
+                val priority = when (rgPriority.checkedRadioButtonId) {
+                    R.id.rbHigh -> Priority.HIGH
+                    R.id.rbMedium -> Priority.MEDIUM
+                    R.id.rbLow -> Priority.LOW
+                    else -> Priority.MEDIUM
+                }
+                
+                // Actualizar la nota manteniendo el ID y timestamp
                 val updatedNote = Note(
                     id = note.id,
                     title = title,
                     description = description,
                     timestamp = note.timestamp,
-                    color = note.color
+                    priority = priority
                 )
                 notesList[originalPosition] = updatedNote
                 filteredNotesList[position] = updatedNote
                 noteAdapter.notifyItemChanged(position)
-                Toast.makeText(this, "Nota actualizada correctamente", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.message_note_updated, Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .create()
         
         // Aplicar animación al diálogo
@@ -289,7 +317,7 @@ class MainActivity : AppCompatActivity() {
         val searchItem = menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
         
-        searchView.queryHint = "Buscar notas..."
+        searchView.queryHint = getString(R.string.search_hint)
         
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -324,23 +352,85 @@ class MainActivity : AppCompatActivity() {
         
         // Mostrar mensaje si no hay resultados
         if (filteredNotesList.isEmpty() && query.isNotEmpty()) {
-            Toast.makeText(this, "No se encontraron notas", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.message_no_results, Toast.LENGTH_SHORT).show()
         }
     }
     
     private fun deleteNote(position: Int) {
         val note = filteredNotesList[position]
         MaterialAlertDialogBuilder(this)
-            .setTitle("Eliminar nota")
-            .setMessage("¿Estás seguro de eliminar '${note.title}'?")
-            .setPositiveButton("Eliminar") { _, _ ->
+            .setTitle(R.string.dialog_title_delete_note)
+            .setMessage(getString(R.string.message_delete_confirm, note.title))
+            .setPositiveButton(R.string.button_delete) { _, _ ->
                 notesList.remove(note)
                 filteredNotesList.removeAt(position)
                 noteAdapter.notifyItemRemoved(position)
-                Toast.makeText(this, "Nota eliminada", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.message_note_deleted, Toast.LENGTH_SHORT).show()
                 updateEmptyState()
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(R.string.button_cancel, null)
             .show()
+    }
+    
+    private fun shareNote(position: Int) {
+        val note = filteredNotesList[position]
+        val shareText = """
+            📝 ${note.title}
+            
+            ${note.description}
+            
+            Prioridad: ${note.priority.displayName}
+            Fecha: ${note.timestamp}
+        """.trimIndent()
+        
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+        
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_chooser_title)))
+    }
+    
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.sort_by_date -> {
+                sortNotesByDate()
+                true
+            }
+            R.id.sort_by_title -> {
+                sortNotesByTitle()
+                true
+            }
+            R.id.sort_by_priority -> {
+                sortNotesByPriority()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    private fun sortNotesByDate() {
+        filteredNotesList.sortByDescending { it.timestamp }
+        noteAdapter.notifyDataSetChanged()
+        Toast.makeText(this, R.string.sort_by_date_message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun sortNotesByTitle() {
+        filteredNotesList.sortBy { it.title.lowercase() }
+        noteAdapter.notifyDataSetChanged()
+        Toast.makeText(this, R.string.sort_by_title_message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun sortNotesByPriority() {
+        filteredNotesList.sortBy { 
+            when (it.priority) {
+                Priority.HIGH -> 0
+                Priority.MEDIUM -> 1
+                Priority.LOW -> 2
+            }
+        }
+        noteAdapter.notifyDataSetChanged()
+        Toast.makeText(this, R.string.sort_by_priority_message, Toast.LENGTH_SHORT).show()
     }
 }

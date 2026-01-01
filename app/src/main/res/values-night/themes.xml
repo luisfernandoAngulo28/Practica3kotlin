@@ -3,5 +3,8 @@
     <style name="Base.Theme.Practica3" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        
+        <!-- Usar el mismo estilo de menú que en modo claro -->
+        <item name="actionOverflowMenuStyle">@style/Widget.App.PopupMenu</item>
     </style>
 </resources>

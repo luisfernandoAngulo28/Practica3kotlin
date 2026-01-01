@@ -2,4 +2,21 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Colores del tema -->
+    <color name="purple_primary">#6750A4</color>
+    <color name="purple_primary_dark">#4A3780</color>
+    <color name="purple_accent">#7B61FF</color>
+    <color name="background_light">#FAFAFA</color>
+    <color name="surface_light">#FFFFFF</color>
+    
+    <!-- Colores de prioridad -->
+    <color name="priority_high">#FFCDD2</color>
+    <color name="priority_medium">#FFF9C4</color>
+    <color name="priority_low">#C8E6C9</color>
+    
+    <!-- Colores del menú -->
+    <color name="menu_background">#F5F5F5</color>
+    <color name="menu_text">#2C2C2C</color>
+    <color name="menu_text_selected">#6750A4</color>
 </resources>

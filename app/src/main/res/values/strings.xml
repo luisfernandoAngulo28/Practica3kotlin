@@ -1,3 +1,52 @@
 <resources>
     <string name="app_name">practica3</string>
+    
+    <!-- Diálogo de notas -->
+    <string name="hint_title">Título</string>
+    <string name="hint_description">Descripción</string>
+    <string name="label_priority">Prioridad</string>
+    <string name="priority_low">🟢 Baja</string>
+    <string name="priority_medium">🟡 Media</string>
+    <string name="priority_high">🔴 Alta</string>
+    
+    <!-- Títulos de diálogos -->
+    <string name="dialog_title_new_note">Nueva Nota</string>
+    <string name="dialog_title_edit_note">Editar Nota</string>
+    <string name="dialog_title_delete_note">Eliminar nota</string>
+    
+    <!-- Botones -->
+    <string name="button_add">Agregar</string>
+    <string name="button_save">Guardar</string>
+    <string name="button_cancel">Cancelar</string>
+    <string name="button_delete">Eliminar</string>
+    <string name="button_eliminate">Eliminar</string>
+    <string name="button_share">Compartir</string>
+    
+    <!-- Mensajes -->
+    <string name="message_delete_confirm">¿Estás seguro de eliminar \'%1$s\'?</string>
+    <string name="message_note_added">Nota agregada correctamente</string>
+    <string name="message_note_updated">Nota actualizada correctamente</string>
+    <string name="message_note_deleted">Nota eliminada</string>
+    <string name="message_title_empty">El título no puede estar vacío</string>
+    <string name="message_description_empty">La descripción no puede estar vacía</string>
+    <string name="message_no_results">No se encontraron notas</string>
+    
+    <!-- Menú -->
+    <string name="menu_search">Buscar</string>
+    <string name="menu_sort">Ordenar</string>
+    <string name="menu_sort_date">Por fecha (recientes primero)</string>
+    <string name="menu_sort_title">Por título (A-Z)</string>
+    <string name="menu_sort_priority">Por prioridad (alta a baja)</string>
+    <string name="search_hint">Buscar notas…</string>
+    
+    <!-- Ordenamiento -->
+    <string name="sort_by_date_message">Ordenado por fecha (más recientes primero)</string>
+    <string name="sort_by_title_message">Ordenado alfabéticamente</string>
+    <string name="sort_by_priority_message">Ordenado por prioridad (alta → baja)</string>
+    
+    <!-- Compartir -->
+    <string name="share_chooser_title">Compartir nota</string>
+    
+    <!-- Estado vacío -->
+    <string name="empty_state_message">No hay notas todavía.\n¡Agrega tu primera nota!</string>
 </resources>
