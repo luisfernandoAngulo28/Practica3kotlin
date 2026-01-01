@@ -3,6 +3,7 @@ package com.example.practica3
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -11,6 +12,8 @@ class NoteAdapter(
     private val notes: MutableList<Note>,
     private val onDeleteClick: (Int) -> Unit
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
+
+    private var lastPosition = -1
 
     class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvTitle: TextView = itemView.findViewById(R.id.tvNoteTitle)
@@ -33,6 +36,13 @@ class NoteAdapter(
         
         holder.btnDelete.setOnClickListener {
             onDeleteClick(position)
+        }
+        
+        // Aplicar animación de entrada
+        if (position > lastPosition) {
+            val animation = AnimationUtils.loadAnimation(holder.itemView.context, R.anim.slide_in_right)
+            holder.itemView.startAnimation(animation)
+            lastPosition = position
         }
     }
 

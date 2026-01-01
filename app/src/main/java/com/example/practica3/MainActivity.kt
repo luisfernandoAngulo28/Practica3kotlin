@@ -43,7 +43,12 @@ class MainActivity : AppCompatActivity() {
         
         // Configurar botón de agregar
         fabAddNote.setOnClickListener {
-            addNewNote()
+            // Animación del FAB al presionarlo
+            it.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fab_scale_down))
+            it.postDelayed({
+                it.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fab_scale_up))
+                addNewNote()
+            }, 200)
         }
     }
     
@@ -55,6 +60,11 @@ class MainActivity : AppCompatActivity() {
         recyclerView.apply {
             adapter = noteAdapter
             layoutManager = LinearLayoutManager(this@MainActivity)
+            // Configurar animaciones para agregar/eliminar items
+            itemAnimator = androidx.recyclerview.widget.DefaultItemAnimator().apply {
+                addDuration = 300
+                removeDuration = 300
+            }
         }
     }
     
@@ -69,7 +79,7 @@ class MainActivity : AppCompatActivity() {
         val etTitle = dialogView.findViewById<EditText>(R.id.etNoteTitle)
         val etDescription = dialogView.findViewById<EditText>(R.id.etNoteDescription)
         
-        MaterialAlertDialogBuilder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle("Nueva Nota")
             .setView(dialogView)
             .setPositiveButton("Agregar") { _, _ ->
@@ -96,7 +106,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Nota agregada correctamente", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancelar", null)
-            .show()
+            .create()
+        
+        // Aplicar animación al diálogo
+        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+        dialog.show()
     }
     
     private fun deleteNote(position: Int) {
