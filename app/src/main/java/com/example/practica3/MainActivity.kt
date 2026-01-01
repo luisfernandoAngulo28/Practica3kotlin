@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.os.Bundle
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var noteAdapter: NoteAdapter
     private lateinit var fabAddNote: FloatingActionButton
+    private lateinit var emptyStateLayout: View
     private val notesList = mutableListOf<Note>()
     private var noteIdCounter = 1
     
@@ -39,12 +41,16 @@ class MainActivity : AppCompatActivity() {
         // Inicializar vistas
         recyclerView = findViewById(R.id.recyclerViewNotes)
         fabAddNote = findViewById(R.id.fabAddNote)
+        emptyStateLayout = findViewById(R.id.emptyStateLayout)
         
         // Agregar notas de ejemplo
         loadSampleNotes()
         
         // Configurar RecyclerView
         setupRecyclerView()
+        
+        // Actualizar estado vacío
+        updateEmptyState()
         
         // Configurar botón de agregar
         fabAddNote.setOnClickListener {
@@ -58,9 +64,11 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun setupRecyclerView() {
-        noteAdapter = NoteAdapter(notesList) { position ->
-            deleteNote(position)
-        }
+        noteAdapter = NoteAdapter(
+            notesList,
+            onDeleteClick = { position -> deleteNote(position) },
+            onEditClick = { position -> editNote(position) }
+        )
         
         recyclerView.apply {
             adapter = noteAdapter
@@ -105,6 +113,7 @@ class MainActivity : AppCompatActivity() {
                     .setPositiveButton("Eliminar") { _, _ ->
                         noteAdapter.removeNote(position)
                         Toast.makeText(this@MainActivity, "Nota eliminada", Toast.LENGTH_SHORT).show()
+                        updateEmptyState()
                     }
                     .setNegativeButton("Cancelar") { _, _ ->
                         // Restaurar el item si cancela
@@ -153,6 +162,8 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun loadSampleNotes() {
+        // Comentar para mostrar Empty State al iniciar
+        // Descomentar para tener notas de ejemplo
         notesList.add(Note(noteIdCounter++, "Comprar despensa", "Leche, pan, huevos y frutas"))
         notesList.add(Note(noteIdCounter++, "Estudiar Android", "Repasar RecyclerView y Adapters"))
         notesList.add(Note(noteIdCounter++, "Ejercicio", "Salir a correr 30 minutos"))
@@ -188,6 +199,7 @@ class MainActivity : AppCompatActivity() {
                 noteAdapter.addNote(newNote)
                 recyclerView.smoothScrollToPosition(notesList.size - 1)
                 Toast.makeText(this, "Nota agregada correctamente", Toast.LENGTH_SHORT).show()
+                updateEmptyState()
             }
             .setNegativeButton("Cancelar", null)
             .create()
@@ -195,6 +207,63 @@ class MainActivity : AppCompatActivity() {
         // Aplicar animación al diálogo
         dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
         dialog.show()
+    }
+    
+    private fun editNote(position: Int) {
+        val note = notesList[position]
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
+        val etTitle = dialogView.findViewById<EditText>(R.id.etNoteTitle)
+        val etDescription = dialogView.findViewById<EditText>(R.id.etNoteDescription)
+        
+        // Pre-llenar los campos con los datos actuales
+        etTitle.setText(note.title)
+        etDescription.setText(note.description)
+        
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle("Editar Nota")
+            .setView(dialogView)
+            .setPositiveButton("Guardar") { _, _ ->
+                val title = etTitle.text.toString().trim()
+                val description = etDescription.text.toString().trim()
+                
+                if (title.isEmpty()) {
+                    Toast.makeText(this, "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+                if (description.isEmpty()) {
+                    Toast.makeText(this, "La descripción no puede estar vacía", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+                // Actualizar la nota manteniendo el ID, timestamp y color
+                val updatedNote = Note(
+                    id = note.id,
+                    title = title,
+                    description = description,
+                    timestamp = note.timestamp,
+                    color = note.color
+                )
+                notesList[position] = updatedNote
+                noteAdapter.notifyItemChanged(position)
+                Toast.makeText(this, "Nota actualizada correctamente", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .create()
+        
+        // Aplicar animación al diálogo
+        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+        dialog.show()
+    }
+    
+    private fun updateEmptyState() {
+        if (notesList.isEmpty()) {
+            emptyStateLayout.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+        } else {
+            emptyStateLayout.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
+        }
     }
     
     private fun deleteNote(position: Int) {
@@ -205,6 +274,7 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Eliminar") { _, _ ->
                 noteAdapter.removeNote(position)
                 Toast.makeText(this, "Nota eliminada", Toast.LENGTH_SHORT).show()
+                updateEmptyState()
             }
             .setNegativeButton("Cancelar", null)
             .show()

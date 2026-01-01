@@ -10,7 +10,8 @@ import com.google.android.material.button.MaterialButton
 
 class NoteAdapter(
     private val notes: MutableList<Note>,
-    private val onDeleteClick: (Int) -> Unit
+    private val onDeleteClick: (Int) -> Unit,
+    private val onEditClick: (Int) -> Unit
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     private var lastPosition = -1
@@ -46,6 +47,12 @@ class NoteAdapter(
         
         holder.btnDelete.setOnClickListener {
             onDeleteClick(position)
+        }
+        
+        // Long press para editar
+        holder.itemView.setOnLongClickListener {
+            onEditClick(position)
+            true
         }
         
         // Aplicar animación de entrada
