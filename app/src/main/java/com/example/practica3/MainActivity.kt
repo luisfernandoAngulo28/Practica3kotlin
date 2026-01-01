@@ -1,5 +1,9 @@
 package com.example.practica3
 
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.os.Bundle
 import android.widget.EditText
 import android.widget.Toast
@@ -8,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -66,6 +71,85 @@ class MainActivity : AppCompatActivity() {
                 removeDuration = 300
             }
         }
+        
+        // Configurar Swipe to Delete
+        setupSwipeToDelete()
+    }
+    
+    private fun setupSwipeToDelete() {
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(
+            0, // No permitir arrastrar (drag)
+            ItemTouchHelper.LEFT // Permitir swipe a la izquierda
+        ) {
+            private val deleteIcon = android.graphics.drawable.ColorDrawable(Color.parseColor("#FF5252"))
+            private val paint = Paint().apply {
+                color = Color.WHITE
+                textSize = 48f
+                textAlign = Paint.Align.CENTER
+            }
+            
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+            
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val note = notesList[position]
+                
+                // Mostrar confirmación antes de eliminar
+                MaterialAlertDialogBuilder(this@MainActivity)
+                    .setTitle("Eliminar nota")
+                    .setMessage("¿Estás seguro de eliminar '${note.title}'?")
+                    .setPositiveButton("Eliminar") { _, _ ->
+                        noteAdapter.removeNote(position)
+                        Toast.makeText(this@MainActivity, "Nota eliminada", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Cancelar") { _, _ ->
+                        // Restaurar el item si cancela
+                        noteAdapter.notifyItemChanged(position)
+                    }
+                    .setOnCancelListener {
+                        // Restaurar el item si cierra el diálogo
+                        noteAdapter.notifyItemChanged(position)
+                    }
+                    .show()
+            }
+            
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                val itemView = viewHolder.itemView
+                
+                // Dibujar fondo rojo detrás del item
+                if (dX < 0) { // Swipe a la izquierda
+                    val background = RectF(
+                        itemView.right.toFloat() + dX,
+                        itemView.top.toFloat(),
+                        itemView.right.toFloat(),
+                        itemView.bottom.toFloat()
+                    )
+                    c.drawRect(background, Paint().apply { color = Color.parseColor("#FF5252") })
+                    
+                    // Dibujar texto "Eliminar"
+                    val textX = itemView.right.toFloat() - 100
+                    val textY = itemView.top.toFloat() + (itemView.height / 2f) + 15
+                    c.drawText("❌ Eliminar", textX, textY, paint)
+                }
+                
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+        }
+        
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
     
     private fun loadSampleNotes() {

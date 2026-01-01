@@ -20,6 +20,13 @@ class NoteAdapter(
         val tvDescription: TextView = itemView.findViewById(R.id.tvNoteDescription)
         val tvTimestamp: TextView = itemView.findViewById(R.id.tvNoteTimestamp)
         val btnDelete: MaterialButton = itemView.findViewById(R.id.btnDelete)
+        
+        // Obtener referencia al CardView para cambiar color de fondo
+        private val cardView = itemView as com.google.android.material.card.MaterialCardView
+        
+        fun setCardBackgroundColor(color: Int) {
+            cardView.setCardBackgroundColor(color)
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -33,6 +40,9 @@ class NoteAdapter(
         holder.tvTitle.text = note.title
         holder.tvDescription.text = note.description
         holder.tvTimestamp.text = note.getFormattedDate()
+        
+        // Aplicar color pastel al fondo de la tarjeta
+        holder.setCardBackgroundColor(note.color)
         
         holder.btnDelete.setOnClickListener {
             onDeleteClick(position)
