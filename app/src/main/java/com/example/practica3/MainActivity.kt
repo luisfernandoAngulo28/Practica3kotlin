@@ -1,19 +1,23 @@
 package com.example.practica3
 
 import android.os.Bundle
-import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
     
     private lateinit var recyclerView: RecyclerView
     private lateinit var noteAdapter: NoteAdapter
-    private lateinit var btnAddNote: Button
+    private lateinit var fabAddNote: FloatingActionButton
     private val notesList = mutableListOf<Note>()
     private var noteIdCounter = 1
     
@@ -29,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         
         // Inicializar vistas
         recyclerView = findViewById(R.id.recyclerViewNotes)
-        btnAddNote = findViewById(R.id.btnAddNote)
+        fabAddNote = findViewById(R.id.fabAddNote)
         
         // Agregar notas de ejemplo
         loadSampleNotes()
@@ -38,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         
         // Configurar botón de agregar
-        btnAddNote.setOnClickListener {
+        fabAddNote.setOnClickListener {
             addNewNote()
         }
     }
@@ -61,18 +65,50 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun addNewNote() {
-        val newNote = Note(
-            id = noteIdCounter++,
-            title = "Nueva Nota #${noteIdCounter - 1}",
-            description = "Esta es una descripción de ejemplo"
-        )
-        noteAdapter.addNote(newNote)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
+        val etTitle = dialogView.findViewById<EditText>(R.id.etNoteTitle)
+        val etDescription = dialogView.findViewById<EditText>(R.id.etNoteDescription)
         
-        // Scroll automático a la nueva nota
-        recyclerView.smoothScrollToPosition(notesList.size - 1)
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Nueva Nota")
+            .setView(dialogView)
+            .setPositiveButton("Agregar") { _, _ ->
+                val title = etTitle.text.toString().trim()
+                val description = etDescription.text.toString().trim()
+                
+                if (title.isEmpty()) {
+                    Toast.makeText(this, "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+                if (description.isEmpty()) {
+                    Toast.makeText(this, "La descripción no puede estar vacía", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+                val newNote = Note(
+                    id = noteIdCounter++,
+                    title = title,
+                    description = description
+                )
+                noteAdapter.addNote(newNote)
+                recyclerView.smoothScrollToPosition(notesList.size - 1)
+                Toast.makeText(this, "Nota agregada correctamente", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
     
     private fun deleteNote(position: Int) {
-        noteAdapter.removeNote(position)
+        val note = notesList[position]
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Eliminar nota")
+            .setMessage("¿Estás seguro de eliminar '${note.title}'?")
+            .setPositiveButton("Eliminar") { _, _ ->
+                noteAdapter.removeNote(position)
+                Toast.makeText(this, "Nota eliminada", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 }
