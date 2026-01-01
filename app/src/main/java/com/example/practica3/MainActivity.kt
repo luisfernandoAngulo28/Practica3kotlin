@@ -5,12 +5,15 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.os.Bundle
+import android.view.Menu
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -25,7 +28,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var noteAdapter: NoteAdapter
     private lateinit var fabAddNote: FloatingActionButton
     private lateinit var emptyStateLayout: View
+    private lateinit var toolbar: Toolbar
     private val notesList = mutableListOf<Note>()
+    private val filteredNotesList = mutableListOf<Note>()
     private var noteIdCounter = 1
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,12 +44,18 @@ class MainActivity : AppCompatActivity() {
         }
         
         // Inicializar vistas
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        
         recyclerView = findViewById(R.id.recyclerViewNotes)
         fabAddNote = findViewById(R.id.fabAddNote)
         emptyStateLayout = findViewById(R.id.emptyStateLayout)
         
         // Agregar notas de ejemplo
         loadSampleNotes()
+        
+        // Inicializar lista filtrada con todas las notas
+        filteredNotesList.addAll(notesList)
         
         // Configurar RecyclerView
         setupRecyclerView()
@@ -65,7 +76,7 @@ class MainActivity : AppCompatActivity() {
     
     private fun setupRecyclerView() {
         noteAdapter = NoteAdapter(
-            notesList,
+            filteredNotesList,
             onDeleteClick = { position -> deleteNote(position) },
             onEditClick = { position -> editNote(position) }
         )
@@ -104,14 +115,16 @@ class MainActivity : AppCompatActivity() {
             
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                val note = notesList[position]
+                val note = filteredNotesList[position]
                 
                 // Mostrar confirmación antes de eliminar
                 MaterialAlertDialogBuilder(this@MainActivity)
                     .setTitle("Eliminar nota")
                     .setMessage("¿Estás seguro de eliminar '${note.title}'?")
                     .setPositiveButton("Eliminar") { _, _ ->
-                        noteAdapter.removeNote(position)
+                        notesList.remove(note)
+                        filteredNotesList.removeAt(position)
+                        noteAdapter.notifyItemRemoved(position)
                         Toast.makeText(this@MainActivity, "Nota eliminada", Toast.LENGTH_SHORT).show()
                         updateEmptyState()
                     }
@@ -196,8 +209,10 @@ class MainActivity : AppCompatActivity() {
                     title = title,
                     description = description
                 )
-                noteAdapter.addNote(newNote)
-                recyclerView.smoothScrollToPosition(notesList.size - 1)
+                notesList.add(newNote)
+                filteredNotesList.add(newNote)
+                noteAdapter.notifyItemInserted(filteredNotesList.size - 1)
+                recyclerView.smoothScrollToPosition(filteredNotesList.size - 1)
                 Toast.makeText(this, "Nota agregada correctamente", Toast.LENGTH_SHORT).show()
                 updateEmptyState()
             }
@@ -210,7 +225,8 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun editNote(position: Int) {
-        val note = notesList[position]
+        val note = filteredNotesList[position]
+        val originalPosition = notesList.indexOf(note)
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
         val etTitle = dialogView.findViewById<EditText>(R.id.etNoteTitle)
         val etDescription = dialogView.findViewById<EditText>(R.id.etNoteDescription)
@@ -244,7 +260,8 @@ class MainActivity : AppCompatActivity() {
                     timestamp = note.timestamp,
                     color = note.color
                 )
-                notesList[position] = updatedNote
+                notesList[originalPosition] = updatedNote
+                filteredNotesList[position] = updatedNote
                 noteAdapter.notifyItemChanged(position)
                 Toast.makeText(this, "Nota actualizada correctamente", Toast.LENGTH_SHORT).show()
             }
@@ -266,13 +283,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        
+        val searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as SearchView
+        
+        searchView.queryHint = "Buscar notas..."
+        
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+            
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterNotes(newText ?: "")
+                return true
+            }
+        })
+        
+        return true
+    }
+    
+    private fun filterNotes(query: String) {
+        filteredNotesList.clear()
+        
+        if (query.isEmpty()) {
+            filteredNotesList.addAll(notesList)
+        } else {
+            val lowerCaseQuery = query.lowercase()
+            notesList.forEach { note ->
+                if (note.title.lowercase().contains(lowerCaseQuery) ||
+                    note.description.lowercase().contains(lowerCaseQuery)) {
+                    filteredNotesList.add(note)
+                }
+            }
+        }
+        
+        noteAdapter.notifyDataSetChanged()
+        
+        // Mostrar mensaje si no hay resultados
+        if (filteredNotesList.isEmpty() && query.isNotEmpty()) {
+            Toast.makeText(this, "No se encontraron notas", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
     private fun deleteNote(position: Int) {
-        val note = notesList[position]
+        val note = filteredNotesList[position]
         MaterialAlertDialogBuilder(this)
             .setTitle("Eliminar nota")
             .setMessage("¿Estás seguro de eliminar '${note.title}'?")
             .setPositiveButton("Eliminar") { _, _ ->
-                noteAdapter.removeNote(position)
+                notesList.remove(note)
+                filteredNotesList.removeAt(position)
+                noteAdapter.notifyItemRemoved(position)
                 Toast.makeText(this, "Nota eliminada", Toast.LENGTH_SHORT).show()
                 updateEmptyState()
             }
